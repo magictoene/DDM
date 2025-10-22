@@ -178,14 +178,11 @@ def plot_displacement_plane(x_disp, y_disp):
 # ==============================================================
 # 6. MAIN WORKFLOW
 # ==============================================================
-def process_trial(folder_path, trial_index=0, sensor_id=6, sensor_height=1140, use_mag=False):
-    """Full pipeline for one trial."""
+def process_trial(df, file_name, sensor_id, sensor_height=1140, use_mag=False, plot=True):
+    """Full pipeline for one trial given its dataframe (no folder reloading)."""
 
-    # --- Load data ---
-    data = load_data(folder_path)
-    file_name = list(data.keys())[trial_index]
-    df = data[file_name]
-    print(f"📂 Using file: {file_name}")
+    print(f"📂 Processing file: {file_name}")
+    print(f"   Sensor ID: {sensor_id}, Height: {sensor_height} mm")
 
     # --- Define columns ---
     acc_cols = [f"Imu_{sensor_id}_ImuAcc:X(g)", f"Imu_{sensor_id}_ImuAcc:Y(g)", f"Imu_{sensor_id}_ImuAcc:Z(g)"]
@@ -212,10 +209,11 @@ def process_trial(folder_path, trial_index=0, sensor_id=6, sensor_height=1140, u
     print(f"Y displacement: {y_min:.2f} mm to {y_max:.2f} mm")
 
     # --- Plots ---
-    time = df_filt["Time(s)"].to_numpy()
-    plot_angles_over_time(time, roll, pitch)
-    plot_displacement_over_time(time, x_disp, y_disp)
-    plot_displacement_plane(x_disp, y_disp)
+    if plot:
+        time = df_filt["Time(s)"].to_numpy()
+        plot_angles_over_time(time, roll, pitch)
+        plot_displacement_plane(x_disp, y_disp)
+        plot_displacement_over_time(time, x_disp, y_disp)
 
     return {
         "file": file_name,
@@ -228,10 +226,13 @@ def process_trial(folder_path, trial_index=0, sensor_id=6, sensor_height=1140, u
         "y_range": (y_min, y_max)
     }
 
-
 # ==============================================================
-# 7. RUN PIPELINE
-# ==============================================================
-if __name__ == "__main__":
-    folder = "measurement/20_10"
-    results = process_trial(folder_path=folder, trial_index=0, sensor_id=6, sensor_height=1140, use_mag=False)
+# 7. RUN PIPELINE - for single file analysis
+#==============================================================
+# if __name__ == "__main__":
+#     folder = "measurement/20_10"
+#     data = load_data(folder)
+#
+#
+#     # run a single trial for demonstration
+#     results = process_trial(df, file_name="", sensor_id=6, sensor_height=1140, use_mag=False, plot=True)
