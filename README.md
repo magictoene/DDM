@@ -28,44 +28,39 @@ pip install numpy pandas scipy matplotlib ahrs
 
 ## 📂 Data Structure
 
-The scripts assume your raw data files (CSV or TXT) are organized within a specified folder path. The example assumes the following structure:
-
-Certainly, here is the folder structure section in raw Markdown code.
-
-Markdown
-
-## 📂 Data Structure
-
 The scripts assume your raw data files (CSV or TXT) are organized within a specified folder path.
 
 
-🚀 Execution GuideThe main analysis is executed by running ellipse_exceedance.py.1. Configure SettingsBefore running, you must configure the parameters inside the if __name__ == "__main__": block of ellipse_exceedance.py:Pythonif __name__ == "__main__":
-    folder = "measurement/lab_day_22/wxdumps" # <-- Update this path
-    
-    # Filenames for baseline Quiet Standing (QS) trials
-    baseline_trials = ["1_QS.csv", "2_QS.csv"]  
-    
-    # Filenames for Limits of Stability (LoS) trials
-    los_trials = ["4_LoS.csv", "5_LoS.csv"]  
-    
-    # Filenames for the trials you want to evaluate against the benchmarks
-    test_trials = ["3_QS.csv"]  
-    
-    # IMU-specific settings:
-    sensor_id = 2             # The ID used in the column headers (e.g., Imu_2_ImuAcc:X(g))
-    sensor_height = 1140      # Height of the sensor from the ground (in mm)
-    
-    results_df = analyze_trials(folder, baseline_trials, los_trials, test_trials, sensor_id=sensor_id, sensor_height=sensor_height)
-    # ... print results ...
+## 🚀 Execution Guide
+The main analysis is executed by running ellipse_exceedance.py.1. Configure SettingsBefore running, you must configure the parameters inside the if __name__ == "__main__": block of ellipse_exceedance.py:
+# Python
+    if __name__ == "__main__":
+        folder = "measurement/lab_day_22/wxdumps" # <-- Update this path
+        
+        # Filenames for baseline Quiet Standing (QS) trials
+        baseline_trials = ["1_QS.csv", "2_QS.csv"]  
+        
+        # Filenames for Limits of Stability (LoS) trials
+        los_trials = ["4_LoS.csv", "5_LoS.csv"]  
+        
+        # Filenames for the trials you want to evaluate against the benchmarks
+        test_trials = ["3_QS.csv"]  
+        
+        # IMU-specific settings:
+        sensor_id = 2             # The ID used in the column headers (e.g., Imu_2_ImuAcc:X(g))
+        sensor_height = 1140      # Height of the sensor from the ground (in mm)
+        
+        results_df = analyze_trials(folder, baseline_trials, los_trials, test_trials, sensor_id=sensor_id, sensor_height=sensor_height)
+        # ... print results ...
     
 2. Run the AnalysisExecute the main script from your terminal:
    ```
    python ellipse_exceedance.py
    ```
-🔬 Analysis Output
+## 🔬 Analysis Output
 The script will perform the following steps and provide both console output and visual plots.
 
-Console Output
+## Console Output
 The console output will summarize the areas of the computed benchmarks and present the final stability metric in a table (Pandas DataFrame).
 
 | Metric | Description |
