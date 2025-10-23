@@ -37,6 +37,32 @@ def compute_exceedance(AP, ML, benchmark):
     prop_exceeded = 100.0 * np.mean(exceeded)
     return exceeded, prop_exceeded
 
+# --- new helper functions ---
+def compute_bsi(prop_exceeded_qs):
+    """BSI_QSth = 1 - (Prop_Exceeded_QSth / 100)"""
+    return 1.0 - (prop_exceeded_qs / 100.0)
+
+
+def compute_los_margin_index(prop_exceeded_los):
+    """LoS_Margin_Index = 1 - (Prop_Exceeded_LoSth / 100)"""
+    return 1.0 - (prop_exceeded_los / 100.0)
+
+
+def compute_composite_balance_score(bsi_qs, los_margin):
+    """Balance_Score = 100 * (0.7 * BSI_QSth + 0.3 * LoS_Margin_Index)"""
+    score = 100.0 * (0.7 * bsi_qs + 0.3 * los_margin)
+    return max(0.0, score)
+
+
+def classify_score(score):
+    """Return categorical interpretation for a numeric score."""
+    if score >= 90.0:
+        return "Excellent"
+    if score >= 75.0:
+        return "Good"
+    if score >= 60.0:
+        return "Moderate"
+    return "Poor"
 
 # =====================================
 # 2. MAIN WRAPPER FOR MULTI-TRIAL ANALYSIS
@@ -55,7 +81,7 @@ def analyze_trials(folder_path, baseline_trials, los_trials, test_trials, sensor
             df = all_data[trial_file]
             res = process_trial(df, file_name=trial_file,
                                 sensor_id=sensor_id, sensor_height=sensor_height,
-                                use_mag=use_mag, plot=True)
+                                use_mag=use_mag, plot=False)
             trial_data[trial_file] = res
 
     # --- Step 2: Compute benchmark ellipses ---
@@ -87,10 +113,20 @@ def analyze_trials(folder_path, baseline_trials, los_trials, test_trials, sensor
         _, prop_exceeded_los = compute_exceedance(AP_los_norm, ML_los_norm,
                                                   {"center": (0, 0), "radii": los_ellipse["radii"]})
 
+        # compute indices and composite score
+        bsi_qs = compute_bsi(prop_exceeded_qs)
+        los_margin = compute_los_margin_index(prop_exceeded_los)
+        balance_score = compute_composite_balance_score(bsi_qs, los_margin)
+        category = classify_score(balance_score)
+
         all_results.append({
             "Trial": test,
             "Prop_Exceeded_QS_%": prop_exceeded_qs,
-            "Prop_Exceeded_LoS_%": prop_exceeded_los
+            "Prop_Exceeded_LoS_%": prop_exceeded_los,
+            "BSI_QSth": bsi_qs,
+            "LoS_Margin_Index": los_margin,
+            "Balance_Score": balance_score,
+            "Score_Category": category
         })
 
         # Optional plot
@@ -112,6 +148,33 @@ def analyze_trials(folder_path, baseline_trials, los_trials, test_trials, sensor
             plt.title(f"{test} | QS {prop_exceeded_qs:.1f}% | LoS {prop_exceeded_los:.1f}%")
             plt.show()
 
+    # summary bar chart for all test trials (optional)
+    if plot_examples and len(all_results) > 0:
+        df_results = pd.DataFrame(all_results)
+        plt.figure(figsize=(max(6, 0.6 * len(df_results)), 4))
+        # colors = df_results["Score_Category"].map({
+        #     "Excellent": "#2ca02c",
+        #     "Good": "#1f77b4",
+        #     "Moderate": "#ff7f0e",
+        #     "Poor": "#d62728"
+        # }).fillna("#7f7f7f")
+        plt.bar(df_results["Trial"], df_results["Balance_Score"], color='steelblue') #, color=colors)
+        plt.axhline(90, color="green", linestyle="--", label="Excellent (≥90)")
+        plt.axhline(75, color="yellow", linestyle="--", label="Good (≥75)")
+        plt.axhline(60, color="orange", linestyle="--", label="Moderate (≥60)")
+        plt.axhline(59, color="red", linestyle=":", label="Poor (<60)")
+        for idx, row in df_results.iterrows():
+            plt.text(idx, row["Balance_Score"] + 1.0, f"{row['Balance_Score']:.1f}", ha='center', va='bottom',
+                     fontsize=8)
+        plt.ylim(0, 110)
+        plt.ylabel("Balance Score (0-100)")
+        plt.title("Composite Balance Scores by Trial")
+        plt.legend()
+        # plt.grid(axis='y', linestyle='--', alpha=0.5)
+        plt.savefig(f"balance_score.png")
+        plt.show()
+
+
     return pd.DataFrame(all_results)
 
 
@@ -121,9 +184,9 @@ def analyze_trials(folder_path, baseline_trials, los_trials, test_trials, sensor
 if __name__ == "__main__":
     folder = "measurement/lab_day_22/wxdumps"
 
-    baseline_trials = ["1_QS.csv", "2_QS.csv"]  # quiet standing filenames
-    los_trials = ["4_LoS.csv", "5_LoS.csv"]  # limits of stability filenames
-    test_trials = ["3_QS.csv"]  # trial to evaluate
+    baseline_trials = ["1_QS.csv"]  # quiet standing filenames
+    los_trials = ["4_LoS.csv"]  # limits of stability filenames
+    test_trials = ["3_QS.csv", "6_LoS.csv"]  # trial to evaluate
 
     results_df = analyze_trials(folder, baseline_trials, los_trials, test_trials, sensor_id=2)
     print("\n=== Threshold Exceedance Results ===")

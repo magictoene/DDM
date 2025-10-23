@@ -175,6 +175,8 @@ def plot_displacement_plane(x_disp, y_disp):
     plt.show()
 
 
+
+
 # ==============================================================
 # 6. MAIN WORKFLOW
 # ==============================================================
@@ -230,6 +232,9 @@ def process_trial(df, file_name, sensor_id, sensor_height=1140, use_mag=False, p
 # 7. RUN PIPELINE - for single file analysis
 #==============================================================
 # if __name__ == "__main__":
+
+
+    process_emg
 #     folder = "measurement/20_10"
 #     data = load_data(folder)
 #
